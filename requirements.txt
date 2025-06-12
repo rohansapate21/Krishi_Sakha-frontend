@@ -1,0 +1,4 @@
+# No Python dependencies required for this project
+HTML5
+CSS
+JS
