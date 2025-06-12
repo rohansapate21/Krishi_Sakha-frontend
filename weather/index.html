@@ -1,0 +1,99 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <title>Weather Forecast</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      padding: 20px;
+      background: #e0f7fa;
+    }
+    h1 {
+      text-align: center;
+    }
+    .weather-container {
+      display: flex;
+      flex-direction: column;
+      align-items: center;
+    }
+    .forecast {
+      display: flex;
+      gap: 20px;
+      flex-wrap: wrap;
+      justify-content: center;
+      margin-top: 20px;
+    }
+    .card {
+      background: #ffffff;
+      padding: 15px;
+      border-radius: 10px;
+      box-shadow: 0 2px 5px rgba(0,0,0,0.1);
+      width: 150px;
+      text-align: center;
+    }
+  </style>
+</head>
+<body>
+
+  <h1>Weather Forecast</h1>
+  <div class="weather-container">
+    <input type="text" id="cityInput" placeholder="Enter city name" />
+    <button onclick="getWeather()">Get Weather</button>
+
+    <div id="today" style="margin-top:20px;"></div>
+    <div class="forecast" id="forecast"></div>
+  </div>
+
+  <script>
+    const apiKey = '27dcd6a7c25da98b88bf4d07eb2618b7';
+
+    async function getWeather() {
+      const city = document.getElementById('cityInput').value;
+      if (!city) {
+        alert('Please enter a city name.');
+        return;
+      }
+
+      const todayDiv = document.getElementById('today');
+      const forecastDiv = document.getElementById('forecast');
+      todayDiv.innerHTML = '';
+      forecastDiv.innerHTML = '';
+
+      try {
+        // Fetch today's weather
+        const todayRes = await fetch(`https://api.openweathermap.org/data/2.5/weather?q=${city}&appid=${apiKey}&units=metric`);
+        const todayData = await todayRes.json();
+
+        todayDiv.innerHTML = `
+          <h2>Today in ${todayData.name}</h2>
+          <p><strong>Temperature:</strong> ${todayData.main.temp} °C</p>
+          <p><strong>Weather:</strong> ${todayData.weather[0].description}</p>
+          <p><strong>Humidity:</strong> ${todayData.main.humidity}%</p>
+        `;
+
+        // Fetch 5-day forecast
+        const forecastRes = await fetch(`https://api.openweathermap.org/data/2.5/forecast?q=${city}&appid=${apiKey}&units=metric`);
+        const forecastData = await forecastRes.json();
+
+        // Filter to get one forecast per day (noon)
+        const dailyData = forecastData.list.filter(item => item.dt_txt.includes("12:00:00"));
+
+        dailyData.slice(0, 5).forEach(day => {
+          const date = new Date(day.dt_txt).toLocaleDateString();
+          forecastDiv.innerHTML += `
+            <div class="card">
+              <h3>${date}</h3>
+              <p><strong>${day.weather[0].main}</strong></p>
+              <p>${day.main.temp} °C</p>
+              <p>Humidity: ${day.main.humidity}%</p>
+            </div>
+          `;
+        });
+      } catch (error) {
+        todayDiv.innerHTML = '<p style="color:red;">Error fetching weather data. Please check the city name or API key.</p>';
+      }
+    }
+  </script>
+</body>
+</html>
